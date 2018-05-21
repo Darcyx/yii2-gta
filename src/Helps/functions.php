@@ -285,7 +285,6 @@ if (!function_exists('json_decode')) {
 function MakePublicTag($atts = array(), $refObj = '', $fields = array())
 {
     $atts['tagname'] = preg_replace("/[0-9]{1,}$/", "", $atts['tagname']);
-    $plusfile        = DEDEINC . '@app/tplLib/plus_' . $atts['tagname'] . '.php';
     $plusfile        = '@app/tplLib/tpl/plus_' . $atts['tagname'] . '.php';
     if (!file_exists($plusfile)) {
         if (isset($atts['rstype']) && $atts['rstype'] == 'string') {
