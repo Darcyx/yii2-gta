@@ -1,0 +1,20 @@
+{
+    "name": "darcyx/yii2-gta",
+    "description": "The Tpl integration for the Yii framework",
+    "keywords": ["yii2", "renderer"],
+    "type": "yii2-extension",
+    "license": "MIT",
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"yii\\gta": "src"}
+    },
+    "minimum-stability": "stable"
+}
