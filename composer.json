@@ -14,7 +14,7 @@
         }
     ],
     "autoload": {
-        "psr-4": {"yii\\gta": "src"}
+        "psr-4": {"yii\\gta\\": "src"}
     },
     "minimum-stability": "stable"
 }
