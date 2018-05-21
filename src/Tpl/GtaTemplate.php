@@ -1,13 +1,16 @@
 <?php
 /**
  * 模板引擎文件
- * @author  darcy <darcyonw@163.com>
- * @date    2018/5/16
+ * @package        DedeCMS.Libraries
+ * @license        http://help.dedecms.com/usersguide/license.html
+ * @date           2018/5/16
  */
 
 namespace yii\gta\tpl;
 
 use Yii;
+use yii\gta\tag\GtaAttribute;
+use yii\gta\tag\GtaTag;
 
 /**
  * 模板解析器
@@ -56,21 +59,21 @@ class GtaTemplate
     {
         //模版目录
         if ($templatedir == '') {
-            $this->templateDir = GTA_TEMPLATE;
+            $this->templateDir = '@template';
         } else {
             $this->templateDir = $templatedir;
         }
 
         //模板include目录
         if ($refDir == '') {
-            $tplDf = Yii::$app->params['cfg_tpl']['df_style'];
+            $tplDf = Yii::$app->params['tpl']['df_style'];
             if (isset($tplDf)) {
                 $this->refDir = $this->templateDir . '/' . $tplDf . '/';
             } else {
                 $this->refDir = $this->templateDir;
             }
         }
-        $this->cacheDir = GTA_CACHE;
+        $this->cacheDir = '@runtime' . Yii::$app->params['tpl']['cache_dir'];
     }
 
     /**
@@ -181,13 +184,10 @@ class GtaTemplate
 
         //不开启缓存、当缓存文件不存在、及模板为更新的文件的时候才载入模板并进行解析
         if ($this->isCache == false || !file_exists($this->cacheFile) || filemtime($this->templateFile) > filemtime($this->cacheFile)) {
-            $t1                 = ExecTime(); //debug
             $fp                 = fopen($this->templateFile, 'r');
             $this->sourceString = fread($fp, filesize($this->templateFile));
             fclose($fp);
             $this->ParseTemplate();
-            //模板解析时间
-            //echo ExecTime() - $t1;
         } else {
             //如果存在config文件，则载入此文件，该文件用于保存 $this->tpCfgs的内容，以供扩展用途
             //模板中用{tag:config name='' value=''/}来设定该值
@@ -276,12 +276,12 @@ class GtaTemplate
      */
     public function CheckDisabledFunctions($str, &$errmsg = '')
     {
-        global $cfg_disable_funs;
-        $cfg_disable_funs = isset($cfg_disable_funs) ? $cfg_disable_funs : 'phpinfo,eval,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source,file_put_contents,fsockopen,fopen,fwrite';
+        $disFunc = Yii::$app->params['tpl']['disable_func'];
+        $disFunc = isset($disFunc) ? $disFunc : 'phpinfo,eval,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source,file_put_contents,fsockopen,fopen,fwrite';
         // 模板引擎增加disable_functions
-        if (!defined('GtaDISFUN')) {
+        if (!defined('GTADISFUN')) {
             $tokens             = token_get_all_nl($str);
-            $disabled_functions = explode(',', $cfg_disable_funs);
+            $disabled_functions = explode(',', $disFunc);
             foreach ($tokens as $token) {
                 if (is_array($token)) {
                     if ($token[0] = '306' && in_array($token[1], $disabled_functions)) {
@@ -525,13 +525,13 @@ class GtaTemplate
 
                 //if、php标记，把整个属性串视为属性
                 if (preg_match("/^if[0-9]{0,}$/", $ttagName)) {
-                    $cAtt->cAttributes                     = new TagAttribute();
+                    $cAtt->cAttributes                     = new GtaAttribute();
                     $cAtt->cAttributes->count              = 2;
                     $cAtt->cAttributes->items['tagname']   = $ttagName;
                     $cAtt->cAttributes->items['condition'] = preg_replace("/^if[0-9]{0,}[\r\n\t ]/", "", $attStr);
                     $innerText                             = preg_replace("/\{else\}/i", '<' . "?php\r\n}\r\nelse{\r\n" . '?' . '>', $innerText);
                 } else if ($ttagName == 'php') {
-                    $cAtt->cAttributes                   = new TagAttribute();
+                    $cAtt->cAttributes                   = new GtaAttribute();
                     $cAtt->cAttributes->count            = 2;
                     $cAtt->cAttributes->items['tagname'] = $ttagName;
                     $cAtt->cAttributes->items['code']    = '<' . "?php\r\n" . trim(preg_replace("/^php[0-9]{0,}[\r\n\t ]/", "", $attStr)) . "\r\n?" . '>';
@@ -540,7 +540,7 @@ class GtaTemplate
                     $cAtt->SetSource($attStr);
                 }
                 $this->count++;
-                $cTag                      = new Tag();
+                $cTag                      = new GtaTag();
                 $cTag->tagName             = $ttagName;
                 $cTag->startPos            = $tagPos;
                 $cTag->endPos              = $i;

@@ -2,11 +2,9 @@
 /**
  * 静态模板引擎
  * GtaTagParse Gta模板解析类
- *
- * function c____GtaTagParse();
- *
- * @author           darcy <darcyonw@163.com>
- * @package          GtaTagParse
+ * @package          DedeCMS.Libraries
+ * @license          http://help.dedecms.com/usersguide/license.html
+ * @version          $Id: dedetag.class.php 1 10:33 2010年7月6日Z tianya $
  * @date             2018/5/16
  */
 
@@ -89,13 +87,12 @@ class GtaTagParse
 
     public $cache_dir = '';
 
-
     /**
      * GtaTagParse constructor.
      */
     public function __construct()
     {
-        if (Yii::$app->params['cfg_tpl']['cache'] == 'Y') {
+        if (Yii::$app->params['tpl']['cache'] == 'Y') {
             $this->IsCache = true;
         } else {
             $this->IsCache = false;
@@ -110,6 +107,7 @@ class GtaTagParse
         $this->Count        = -1;
         $this->TempMkTime   = 0;
         $this->CacheFile    = '';
+        $this->cache_dir    = '@runtime' . Yii::$app->params['tpl']['cache_dir'];
     }
 
     /**
@@ -175,12 +173,12 @@ class GtaTagParse
      */
     public function CheckDisabledFunctions($str, &$errmsg = '')
     {
-        global $cfg_disable_funs;
-        $cfg_disable_funs = isset($cfg_disable_funs) ? $cfg_disable_funs : 'phpinfo,eval,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source,file_put_contents,fsockopen,fopen,fwrite';
+        $disFunc = Yii::$app->params['tpl']['disable_func'];
+        $disFunc = isset($disFunc) ? $disFunc : 'phpinfo,eval,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source,file_put_contents,fsockopen,fopen,fwrite';
         // 模板引擎增加disable_functions
-        if (defined('GtaDISFUN')) {
+        if (defined('GTADISFUN')) {
             $tokens             = token_get_all_nl('<?php' . $str . "\n\r?>");
-            $disabled_functions = explode(',', $cfg_disable_funs);
+            $disabled_functions = explode(',', $disFunc);
             foreach ($tokens as $token) {
                 if (is_array($token)) {
                     if ($token[0] = '306' && in_array($token[1], $disabled_functions)) {
@@ -368,15 +366,13 @@ class GtaTagParse
      */
     public function LoadCache($filename)
     {
-        $cfg_tpl_cache_dir = Yii::$app->params['cfg_tpl']['cache_dir'];
         if (!$this->IsCache) {
             return false;
         }
         $cdir             = dirname($filename);
-        $cachedir         = Yii::getAlias('@runtime') . $cfg_tpl_cache_dir;
         $ckfile           = str_replace($cdir, '', $filename) . substr(md5($filename), 0, 16) . '.inc';
-        $ckfullfile       = $cachedir . $ckfile;
-        $ckfullfile_t     = $cachedir . $ckfile . '.txt';
+        $ckfullfile       = $this->cache_dir . $ckfile;
+        $ckfullfile_t     = $this->cache_dir . $ckfile . '.txt';
         $this->CacheFile  = $ckfullfile;
         $this->TempMkTime = filemtime($filename);
         if (!file_exists($ckfullfile) || !file_exists($ckfullfile_t)) {
@@ -483,7 +479,7 @@ class GtaTagParse
      */
     public function LoadSource($str)
     {
-        $filename          = Yii::getAlias('@runtime') . '/tpl/cache/' . md5($str) . '.inc';
+        $filename          = $this->cache_dir . '/' . md5($str) . '.inc';
         $this->tagHashFile = $filename;
         if (!is_file($filename)) {
             file_put_contents($filename, $str);
@@ -796,16 +792,15 @@ class GtaTagParse
      */
     public function IncludeFile($fileName, $isMake = 'no')
     {
-        $cfg_df_style = Yii::$app->params['cfg_tpl']['df_style'];
+        $cfg_df_style = Yii::$app->params['tpl']['df_style'];
         $restr        = '';
         if ($fileName == '') {
             return '';
         }
-        $basePath = Yii::getAlias('@app');
-        if (file_exists($basePath . "/templates/" . $fileName)) {
-            $okfile = $basePath . "/templates/" . $fileName;
-        } else if (file_exists($basePath . '/templates/' . $cfg_df_style . '/' . $fileName)) {
-            $okfile = $basePath . '/templates/' . $cfg_df_style . '/' . $fileName;
+        if (file_exists('@templates/' . $fileName)) {
+            $okfile = "@templates/" . $fileName;
+        } else if (file_exists('@templates/' . $cfg_df_style . '/' . $fileName)) {
+            $okfile = '@templates/' . $cfg_df_style . '/' . $fileName;
         } else {
             return "无法在这个位置找到： $fileName";
         }
@@ -835,7 +830,6 @@ class GtaTagParse
     public function RunPHP(&$refObj, $i)
     {
         $GtaMeValue = '';
-        $phpCode    = '';
         if ($refObj->GetAtt('source') == 'value') {
             $phpCode = $this->CTags[$i]->TagValue;
         } else {
@@ -876,14 +870,14 @@ class GtaTagParse
 
     public function MakeOneTag(&$dtp, &$refObj, $parfield = 'Y')
     {
-        global $cfg_disable_tags;
-        $cfg_disable_tags = isset($cfg_disable_tags) ? $cfg_disable_tags : 'php';
-        $disable_tags     = explode(',', $cfg_disable_tags);
+        $disable_tags = Yii::$app->params['tpl']['disable_tags'];
+        $disable_tags = isset($disable_tags) ? $disable_tags : 'php';
+        $disable_tags = explode(',', $disable_tags);
 
         $alltags = array();
         $dtp->setRefObj($refObj);
         //读取自由调用tag列表
-        $dh = dir(dirname(__DIR__) . '/TagLib');
+        $dh = dir('@tplLib/tag');
         while ($filename = $dh->read()) {
             if (preg_match("/\.lib\./", $filename)) {
                 $alltags[] = str_replace('.lib.php', '', $filename);
@@ -920,22 +914,12 @@ class GtaTagParse
             }
             if (in_array($tagname, $alltags)) {
                 if (in_array($tagname, $disable_tags)) {
-                    if (DEBUG_LEVEL) {
-                        echo 'CMS Error:Tag disabled:"' . $tagname;
-                    }
                     continue;
                 }
-                if (DEBUG_LEVEL == true) {
-                    $ttt1 = ExecTime();
-                }
-                $filename = dirname(__DIR__) . '/taglib/' . $tagname . '.lib.php';
+                $filename = '@tplLib/tag/' . $tagname . '.lib.php';
                 include_once $filename;
                 $funcname = 'lib_' . $tagname;
                 $dtp->Assign($tagid, $funcname($ctag, $refObj));
-                if (DEBUG_LEVEL == true) {
-                    $queryTime = ExecTime() - $ttt1;
-                    echo '标签：' . $tagname . '载入花费时间：' . $queryTime . "<br />\r\n";
-                }
             }
         }
     }

@@ -1,2 +1,2 @@
-# yii2-template
-base dedecms template
+# yii2-gta
+此项目基于DedeCMS模版处理引擎，如果版权问题，请及时联系本人删除。

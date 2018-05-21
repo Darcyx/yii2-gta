@@ -1,9 +1,9 @@
 <?php
 /**
  * 动态模板引擎
- *
- * @author  darcy <darcyonw@163.com>
- * @date    2018/5/16
+ * @package        DedeCMS.Libraries
+ * @license        http://help.dedecms.com/usersguide/license.html
+ * @date           2018/5/16
  */
 
 namespace yii\gta\tpl;

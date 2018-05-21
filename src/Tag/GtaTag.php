@@ -1,15 +1,16 @@
 <?php
 /**
  * GTA模板类
- * @version        $Id: GtaTag.class.php
+ * @package        DedeCMS.Libraries
+ * @license        http://help.dedecms.com/usersguide/license.html
+ * @version        $Id: dedetag.class.php 1 10:33 2010年7月6日Z tianya $
  */
 
 namespace yii\gta\tag;
 
 /**
  * class GtaTag 标记的数据结构描述
- * function c____GtaTag();
- * @package          GtaTag
+ * @package GtaTag
  */
 class GtaTag
 {

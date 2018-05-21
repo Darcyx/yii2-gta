@@ -2,8 +2,10 @@
 /**
  * Gta模板标记属性集合
  *
- * @author  darcy <darcyonw@163.com>
- * @date    2018/5/16
+ * @package        DedeCMS.Libraries
+ * @license        http://help.dedecms.com/usersguide/license.html
+ * @version        $Id: dedetag.class.php 1 10:33 2010年7月6日Z tianya $
+ * @date           2018/5/16
  */
 
 namespace yii\gta\tag;
@@ -50,11 +52,7 @@ class GtaAttribute
      */
     function IsAttribute($str)
     {
-        if (isset($this->Items[$str])) {
-            return true;
-        } else {
-            return false;
-        }
+        return isset($this->Items[$str]) ? true : false;
     }
 
     /**
