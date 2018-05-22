@@ -101,13 +101,13 @@ class GtaTagParse
         $this->TagStartWord = '{';
         $this->TagEndWord   = '}';
         $this->TagMaxLen    = 64;
-        $this->CharToLow    = true;
+        $this->CharToLow    = false;
         $this->SourceString = '';
         $this->CTags        = array();
         $this->Count        = -1;
         $this->TempMkTime   = 0;
         $this->CacheFile    = '';
-        $this->cache_dir    = '@runtime' . Yii::$app->params['tpl']['cache_dir'];
+        $this->cache_dir    = Yii::getAlias('@runtime') . Yii::$app->params['tpl']['cache_dir'];
     }
 
     /**
@@ -797,10 +797,11 @@ class GtaTagParse
         if ($fileName == '') {
             return '';
         }
-        if (file_exists('@templates/' . $fileName)) {
-            $okfile = "@templates/" . $fileName;
-        } else if (file_exists('@templates/' . $cfg_df_style . '/' . $fileName)) {
-            $okfile = '@templates/' . $cfg_df_style . '/' . $fileName;
+        $tplDir = Yii::getAlias('@templates');
+        if (file_exists($tplDir . '/' . $fileName)) {
+            $okfile = $tplDir . '/' . $fileName;
+        } else if (file_exists($tplDir . '/' . $cfg_df_style . '/' . $fileName)) {
+            $okfile = $tplDir . '/' . $cfg_df_style . '/' . $fileName;
         } else {
             return "无法在这个位置找到： $fileName";
         }
@@ -877,10 +878,11 @@ class GtaTagParse
         $alltags = array();
         $dtp->setRefObj($refObj);
         //读取自由调用tag列表
-        $dh = dir('@tplLib/tag');
+
+        $dh = dir(Yii::getAlias('@tplLib') . '/tag');
         while ($filename = $dh->read()) {
-            if (preg_match("/\.lib\./", $filename)) {
-                $alltags[] = str_replace('.lib.php', '', $filename);
+            if (preg_match("/\.php/", $filename)) {
+                $alltags[] = strtolower(str_replace('.php', '', $filename));
             }
         }
         $dh->Close();
@@ -905,21 +907,14 @@ class GtaTagParse
                 continue;
             }
 
-            //由于考虑兼容性，原来文章调用使用的标记别名统一保留，这些标记实际调用的解析文件为inc_arclist.php
-            if (preg_match("/^(artlist|likeart|hotart|imglist|imginfolist|coolart|specart|autolist)$/", $tagname)) {
-                $tagname = 'arclist';
-            }
-            if ($tagname == 'friendlink') {
-                $tagname = 'flink';
-            }
             if (in_array($tagname, $alltags)) {
                 if (in_array($tagname, $disable_tags)) {
                     continue;
                 }
-                $filename = '@tplLib/tag/' . $tagname . '.lib.php';
-                include_once $filename;
-                $funcname = 'lib_' . $tagname;
-                $dtp->Assign($tagid, $funcname($ctag, $refObj));
+                include_once Yii::getAlias('@tplLib') . '/tag/' . ucfirst($ctag->TagName) . '.php';
+                $tagClass = '\\libs\\tag\\' . ucfirst($ctag->TagName);
+                $function = 'get' . ucfirst($ctag->TagName);
+                $dtp->Assign($tagid, $tagClass::$function($ctag, $refObj));
             }
         }
     }
