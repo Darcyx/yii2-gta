@@ -869,6 +869,13 @@ class GtaTagParse
         }
     }
 
+    /**
+     * 解析tag标签
+     * @param        $dtp
+     * @param        $refObj
+     * @param string $parfield
+     * @return string
+     */
     public function MakeOneTag(&$dtp, &$refObj, $parfield = 'Y')
     {
         $disable_tags = Yii::$app->params['tpl']['disable_tags'];
